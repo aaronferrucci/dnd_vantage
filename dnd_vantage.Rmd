@@ -5,16 +5,52 @@ output:
     df_print: paged
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+From [538 Riddler](https://fivethirtyeight.com/features/can-you-find-the-best-dungeons-dragons-strategy/)
 
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+> The fifth edition of Dungeons & Dragons introduced a system
+> of “advantage and disadvantage.” When you roll a die “with
+> advantage,” you roll the die twice and keep the higher result. Rolling
+> “with disadvantage” is similar, except you keep the lower result
+> instead. The rules further specify that when a player rolls with both
+> advantage and disadvantage, they cancel out, and the player rolls a
+> single die. Yawn!
+> 
+> There are two other, more mathematically interesting ways that advantage
+> and disadvantage could be combined. First, you could have “advantage of
+> disadvantage,” meaning you roll twice with disadvantage and then keep
+> the higher result. Or, you could have “disadvantage of advantage,”
+> meaning you roll twice with advantage and then keep the lower result. With
+> a fair 20-sided die, which situation produces the highest expected
+> roll: advantage of disadvantage, disadvantage of advantage or rolling
+> a single die?
+> 
+> Extra Credit: Instead of maximizing your expected roll, suppose you
+> need to roll N or better with your 20-sided die. For each value of N,
+> is it better to use advantage of disadvantage, disadvantage of advantage
+> or rolling a single die?
 
+I'll start with the basics: rolling a single die, rolling with advantage, rolling with disadvantage.
 ```{r}
-plot(cars)
+N <- 100000
+roll1 <- sample(1:20, N, replace=T)
+roll2 <- sample(1:20, N, replace=T)
+rolls <- data.frame(single=roll1, advantage=pmax(roll1, roll2), disadvantage=pmin(roll1, roll2))
+summary(rolls)
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+The mean of the single roll is close to the expected 10.5. I'm not sure what I expect for advantage and disadvantage rolls, beyond the simple intuition that they are better/worse than a single roll, and that checks out here, with about 13.8 for advantage, 7.2 for disadvantage.
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+How about a visualization?
+```{r}
+library(reshape2)
+r <- melt(rolls)
+names(r) <- c("type", "roll")
+library(ggplot2)
+ggplot(r, aes(x=type, y=roll)) + geom_jitter(alpha=0.01, width=0.2)
+```
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+I guess that's pretty, but maybe it's not telling me too much. A histogram is more useful.
+```{r}
+p <- ggplot(r, aes(roll, fill=type)) + geom_bar()
+p + facet_grid(. ~ type)
+```
