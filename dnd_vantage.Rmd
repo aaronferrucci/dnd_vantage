@@ -31,7 +31,7 @@ From [538 Riddler](https://fivethirtyeight.com/features/can-you-find-the-best-du
 
 I'll start with the basics: rolling a single die, rolling with advantage, rolling with disadvantage.
 ```{r}
-N <- 100000
+N <- 1000000
 roll1 <- sample(1:20, N, replace=T)
 roll2 <- sample(1:20, N, replace=T)
 rolls <- data.frame(single=roll1, advantage=pmax(roll1, roll2), disadvantage=pmin(roll1, roll2))
@@ -40,17 +40,51 @@ summary(rolls)
 
 The mean of the single roll is close to the expected 10.5. I'm not sure what I expect for advantage and disadvantage rolls, beyond the simple intuition that they are better/worse than a single roll, and that checks out here, with about 13.8 for advantage, 7.2 for disadvantage.
 
-How about a visualization?
+How about a visualization? A histogram will show the shape of the probabilities.
+
 ```{r}
 library(reshape2)
-r <- melt(rolls)
+r <- melt(rolls, id.vars=NULL)
 names(r) <- c("type", "roll")
 library(ggplot2)
-ggplot(r, aes(x=type, y=roll)) + geom_jitter(alpha=0.01, width=0.2)
-```
-
-I guess that's pretty, but maybe it's not telling me too much. A histogram is more useful.
-```{r}
-p <- ggplot(r, aes(roll, fill=type)) + geom_bar()
+p <- ggplot(r, aes(roll, fill=type)) + geom_bar(show.legend=F) + scale_x_continuous(breaks=c(1, 5, 10, 15, 20))
 p + facet_grid(. ~ type)
 ```
+
+Another way to look at the probabilties is with a boxplot. This shows the median, 25th, and 75th percentile. A diamond shows the mean (expected value).
+```{r}
+ggplot(r, aes(type, roll, color=type)) + geom_boxplot(show.legend=F) + stat_summary(fun.y=mean, geom="point", shape=18, size=3) + scale_y_continuous(breaks=c(1, 5, 10, 15, 20))
+```
+
+Enough tinkering! To roll with disadvantage, you roll twice and take the min. For an advantage of disadvantage roll, you roll with disadvantage twice, and take the max. That's 4 rolls. Disadvantage of advantage is the same, with min and max swapped.
+
+I'll do 4 single rolls, and then reduce them down in two different ways to do advantage of disadvantage, and disadvantage of advantage. I'll use the first single roll for comparison against the other two distributions.
+
+```{r}
+N <- 1000000
+roll1 <- sample(1:20, N, replace=T)
+roll2 <- sample(1:20, N, replace=T)
+roll3 <- sample(1:20, N, replace=T)
+roll4 <- sample(1:20, N, replace=T)
+rolls <- data.frame(single=roll1, d_of_a=pmin(pmax(roll1, roll2), pmax(roll3, roll4)), a_of_d=pmax(pmin(roll1, roll2), pmin(roll3, roll4)))
+summary(rolls)
+```
+
+Seems like, compared to a single roll, disadvantage of advantage is slightly better, and advantage of disadvantage is slightly worse.
+
+Maybe the histograms show something more?
+
+```{r}
+r <- melt(rolls, id.vars=NULL)
+names(r) <- c("type", "roll")
+p <- ggplot(r, aes(roll, fill=type)) + geom_bar(show.legend=F) + scale_x_continuous(breaks=c(1, 5, 10, 15, 20))
+p + facet_grid(. ~ type)
+```
+Looks like slightly-skewed bell curves.
+
+How about the boxplots?
+
+```{r}
+ggplot(r, aes(type, roll, color=type)) + geom_boxplot(show.legend=F) + stat_summary(fun.y=mean, geom="point", shape=18, size=3) + scale_y_continuous(breaks=c(1, 5, 10, 15, 20))
+```
+
