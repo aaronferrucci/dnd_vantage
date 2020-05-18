@@ -69,7 +69,7 @@ p + facet_grid(. ~ type)
 
 Interesting: the most likely result on an advantage roll is 20, and on a disadvantage roll it's 1.
 
-Another way to look at the probabilties is with a boxplot. This shows the median, 25th, and 75th percentile. The expected value is marked with
+Another way to look at the probabilities is with a boxplot. This shows the median, 25th, and 75th percentile. The expected value is marked with
 a diamond.
 
 ```{r}
@@ -81,7 +81,7 @@ ggplot(rolls, aes(type, roll, color=type)) +
 
 Enough tinkering! For an advantage-of-disadvantage roll, you roll with disadvantage twice, and take the max. That's 4 single rolls. Disadvantage-of-advantage is the same, with disadvantage and advantage, min and max swapped.
 
-I'll do 4 single rolls, and then reduce them down in two different ways to do advantage-of-disadvantage, disadvantage-of-advantage. I'll keep the first single roll for comparison against the other two distributions.
+I'll do 4 single rolls, and then reduce them down in two different ways to do advantage-of-disadvantage, disadvantage-of-advantage. I'll keep the first single roll for comparison against the other two roll types.
 
 ```{r}
 roll1 <- sample(1:20, iters, replace=T)
