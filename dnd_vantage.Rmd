@@ -1,5 +1,5 @@
 ---
-title: "R Notebook"
+title: "Pressing the (Dis)Advantage"
 output:
   html_document:
     df_print: paged
@@ -11,7 +11,7 @@ library(dplyr)
 library(ggplot2)
 ```
 
-From [538 Riddler](https://fivethirtyeight.com/features/can-you-find-the-best-dungeons-dragons-strategy/)
+From [538 Riddler: Can You Find The Best Dungeons & Dragons Strategy?](https://fivethirtyeight.com/features/can-you-find-the-best-dungeons-dragons-strategy/)
 
 > The fifth edition of Dungeons & Dragons introduced a system
 > of “advantage and disadvantage.” When you roll a die “with
@@ -47,12 +47,12 @@ summary(raw_rolls)
 
 The mean of the single roll is close to the expected 10.5. I'm not sure what I expect for advantage and disadvantage rolls, beyond the simple intuition that they are better/worse than a single roll, and that checks out here, with about 13.8 for advantage, 7.2 for disadvantage.
 
-How about a visualization? A histogram of the simulation results will approximate the probability mass functions. 
+How about a visualization? Histograms of the simulation results approximate the probability mass functions.
 
 ```{r}
 rolls <- melt(raw_rolls, id.vars=NULL)
 names(rolls) <- c("type", "roll")
-# re-order the factor so the graph is ordered left-to-right, best-to-worst
+# re-order the factor so things are ordered left-to-right, best-to-worst
 rolls$type <- factor(rolls$type, levels=c("advantage", "single", "disadvantage"))
 roll_pmf <- rolls %>% group_by(type, roll) %>% summarize(count=n()) %>% mutate(frequency=count/sum(count))
 
@@ -64,7 +64,8 @@ p + facet_grid(. ~ type)
 
 Interesting: the most likely result on an advantage roll is 20, and on a disadvantage roll it's 1.
 
-Another way to look at the probabilties is with a boxplot. This shows the median, 25th, and 75th percentile. A diamond shows the expected value.
+Another way to look at the probabilties is with a boxplot. This shows the median, 25th, and 75th percentile. The expected value is marked with
+a diamond.
 
 ```{r}
 ggplot(rolls, aes(type, roll, color=type)) +
@@ -73,10 +74,9 @@ ggplot(rolls, aes(type, roll, color=type)) +
   scale_y_continuous(breaks=c(1, 5, 10, 15, 20))
 ```
 
-Enough tinkering! For an advantage of disadvantage roll, you roll with disadvantage twice, and take the max. That's 4 single rolls. Disadvantage
-of advantage is the same, with disadvantage and advantage, min and max swapped.
+Enough tinkering! For an advantage-of-disadvantage roll, you roll with disadvantage twice, and take the max. That's 4 single rolls. Disadvantage-of-advantage is the same, with disadvantage and advantage, min and max swapped.
 
-I'll do 4 single rolls, and then reduce them down in two different ways to do advantage of disadvantage, and disadvantage of advantage. I'll keep the first single roll for comparison against the other two distributions.
+I'll do 4 single rolls, and then reduce them down in two different ways to do advantage-of-disadvantage, disadvantage-of-advantage. I'll keep the first single roll for comparison against the other two distributions.
 
 ```{r}
 roll1 <- sample(1:20, N, replace=T)
@@ -97,14 +97,14 @@ Now I can answer the first question:
 > roll: advantage of disadvantage, disadvantage of advantage or rolling
 > a single die?
 
-Answer: disadvantage of advantage is best, with an expected value around 11.2. A single roll is the next best choice, with an expected value of 10.5. Last place goes to advantage of disadvantage, with an expected value around 9.8. 
+Answer: disadvantage-of-advantage is best, with an expected value around 11.2. A single roll is the next best choice, with an expected value of 10.5. Last place goes to advantage-of-disadvantage, with an expected value around 9.8.
 
-Maybe the histograms show something more?
+What do the approximate probability mass functions look like?
 
 ```{r}
 rolls <- melt(raw_rolls, id.vars=NULL)
 names(rolls) <- c("type", "roll")
-# re-order the factor so the graph is ordered left-to-right, best-to-worst
+# re-order the factor so things are ordered left-to-right, best-to-worst
 rolls$type <- factor(rolls$type, levels=c("disadvantage_of_advantage", "single", "advantage_of_disadvantage"))
 
 roll_pmf <- rolls %>% group_by(type, roll) %>% summarize(count=n()) %>% mutate(frequency=count/sum(count))
@@ -115,9 +115,9 @@ p <- ggplot(roll_pmf, aes(x=roll, y=frequency, fill=type)) +
 p + facet_grid(. ~ type)
 ```
 
-These look like slightly-skewed bell curves.
+Both disadvantage-of-advantage and advantage-of-disadvantage cluster in the middle, centered around 10 or so. If you're betting on rolling a 20 (or a 1), go with a single roll.
 
-Boxplots confirm the answer, and highlight how much closer all three choices are to one another, compared to conventional advantage and disadvantage rolls.
+As a cross-check, boxplots confirm the answer, and highlight how much closer all three choices are to one another, compared to conventional advantage and disadvantage rolls.
 
 ```{r}
 ggplot(rolls, aes(type, roll, color=type)) +
@@ -126,3 +126,26 @@ ggplot(rolls, aes(type, roll, color=type)) +
   scale_y_continuous(breaks=c(1, 5, 10, 15, 20))
 ```
 
+How about that extra credit question?
+
+> Instead of maximizing your expected roll, suppose you
+> need to roll N or better with your 20-sided die. For each value of N,
+> is it better to use advantage of disadvantage, disadvantage of advantage
+> or rolling a single die?
+
+The simulated probability mass functions answer this one. For example, if we need to roll 19 or higher, the odds of success are the probability of rolling a 19, plus the odds of rolling a 20, for each of the three roll types. We'll calculate all the odds with a cumulative sum, from 20 downward.
+
+Sanity checks/expectations: for each roll type, we expect to see 100% success if N=1. As N increases, the odds of success decrease, down to the minimum at 20 (the odds of getting 20, for each type).
+
+```{r}
+roll_pmf <- roll_pmf %>% mutate(rcdf = rev(cumsum(rev(frequency))))
+p <- ggplot(roll_pmf, aes(x=roll, y=rcdf, color=type)) +
+  geom_point() +
+  geom_line() +
+  scale_x_continuous(breaks=c(1, 5, 10, 15, 20))
+p + xlab("N") + ylab("odds of rolling N or higher")
+```
+
+Advantage-of-disadvantage is only an optimal choice when N=1 (you need to roll 1 or higher - not an interesting situation!). It's vacuous: all 3 choices give the same "odds". Otherwise, chose disadvantage-of-advantage for N up to 13, and choose single roll for N=14 and higher.
+
+Source code is [here](https://github.com/aaronferrucci/dnd_vantage)
