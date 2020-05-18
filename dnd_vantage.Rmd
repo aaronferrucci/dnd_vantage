@@ -154,5 +154,6 @@ p + xlab("N") + ylab("odds of rolling N or higher")
 Advantage-of-disadvantage is only an optimal choice when N=1 (you need to roll 1 or higher - not an interesting situation!). It's vacuous: all 3 choices give the same "odds". Otherwise, choose disadvantage-of-advantage for N up to 13, and choose single roll for N=14 and higher.
 
 Source code is [here](https://github.com/aaronferrucci/dnd_vantage)
+
 Github hosting is [here](https://aaronferrucci.github.io/dnd_vantage/)
 
