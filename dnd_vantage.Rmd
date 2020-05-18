@@ -43,9 +43,9 @@ From [538 Riddler: Can You Find The Best Dungeons & Dragons Strategy?](https://f
 First I'll have a look at the conventional rolls: rolling a single die, rolling with advantage, rolling with disadvantage.
 
 ```{r}
-N <- 1000000
-roll1 <- sample(1:20, N, replace=T)
-roll2 <- sample(1:20, N, replace=T)
+iters <- 1000000
+roll1 <- sample(1:20, iters, replace=T)
+roll2 <- sample(1:20, iters, replace=T)
 raw_rolls <- data.frame(advantage=pmax(roll1, roll2), single=roll1, disadvantage=pmin(roll1, roll2))
 summary(raw_rolls)
 ```
@@ -84,10 +84,10 @@ Enough tinkering! For an advantage-of-disadvantage roll, you roll with disadvant
 I'll do 4 single rolls, and then reduce them down in two different ways to do advantage-of-disadvantage, disadvantage-of-advantage. I'll keep the first single roll for comparison against the other two distributions.
 
 ```{r}
-roll1 <- sample(1:20, N, replace=T)
-roll2 <- sample(1:20, N, replace=T)
-roll3 <- sample(1:20, N, replace=T)
-roll4 <- sample(1:20, N, replace=T)
+roll1 <- sample(1:20, iters, replace=T)
+roll2 <- sample(1:20, iters, replace=T)
+roll3 <- sample(1:20, iters, replace=T)
+roll4 <- sample(1:20, iters, replace=T)
 raw_rolls <- data.frame(
   disadvantage_of_advantage=pmin(pmax(roll1, roll2), pmax(roll3, roll4)),
   single=roll1,
@@ -151,6 +151,8 @@ p <- ggplot(roll_pmf, aes(x=roll, y=rcdf, color=type)) +
 p + xlab("N") + ylab("odds of rolling N or higher")
 ```
 
-Advantage-of-disadvantage is only an optimal choice when N=1 (you need to roll 1 or higher - not an interesting situation!). It's vacuous: all 3 choices give the same "odds". Otherwise, chose disadvantage-of-advantage for N up to 13, and choose single roll for N=14 and higher.
+Advantage-of-disadvantage is only an optimal choice when N=1 (you need to roll 1 or higher - not an interesting situation!). It's vacuous: all 3 choices give the same "odds". Otherwise, choose disadvantage-of-advantage for N up to 13, and choose single roll for N=14 and higher.
 
 Source code is [here](https://github.com/aaronferrucci/dnd_vantage)
+Github hosting is [here](https://aaronferrucci.github.io/dnd_vantage/)
+
